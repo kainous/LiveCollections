@@ -141,16 +141,16 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
     member this.ToReadOnlyNotificationCollection context =
       upcast new ReactiveObservableCollection<'T>(_subject, context)
 
-type ReactiveCollectionBuilder() =
-  member this.Yield x =
-    new ReactiveCollectionSource<_>([x])
-  member this.YieldFrom (x:IReactiveCollection<'T>) = 
-    x
-  member this.
+//type ReactiveCollectionBuilder() =
+//  member this.Yield x =
+//    new ReactiveCollectionSource<_>([x])
+//  member this.YieldFrom (x:IReactiveCollection<'T>) = 
+//    x
+//  member this.
  
-let rxc = ReactiveCollectionBuilder()
+//let rxc = ReactiveCollectionBuilder()
 
-let sdfs = rxc {
-  yield 1
-  yield 2
-}
+//let sdfs = rxc {
+//  yield 1
+//  yield 2
+//}
