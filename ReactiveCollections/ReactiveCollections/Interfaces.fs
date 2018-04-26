@@ -19,7 +19,7 @@ type ITag<'T> =
   abstract ServerData : ITagData<'T>
 
 type CollectionChangeNotification<'T> =
-| Add    of 'T
+| Insert of 'T
 | Remove of 'T
 
 type ICollectionChangeData<'T> =

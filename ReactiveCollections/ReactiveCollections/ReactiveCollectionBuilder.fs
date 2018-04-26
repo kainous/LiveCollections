@@ -24,7 +24,7 @@ let inline NotificationFunctor (func:'T -> CollectionChangeNotification<'T>) ite
 let inline Post this (context:SynchronizationContext) (method:Event<_,_>) args =
   context.Post((fun _ -> method.Trigger(this, args)), state = null)
 
-type private ReactiveObservableCollection<'T>(items:IObservable<ICollectionChangeData<'T>>, context:SynchronizationContext) as this =
+type private ReactiveObservableCollection<'T>(items:IObservable<ICollectionChangeData<'T>>, context) as this =
   let _propertyChangeEvent = Event<_,_>()
   let _collectionChangeEvent = Event<_,_>()
   let _lock = AsyncReaderWriterLock()
@@ -33,23 +33,25 @@ type private ReactiveObservableCollection<'T>(items:IObservable<ICollectionChang
   
   let OnNext changes =
     let rec splitChanges additions deletions = function
-    | Add item::tail -> 
-      let additions = if _items.Add item
-                      then items::additions 
-                      else additions
-      splitChanges additions deletions tail
-    | Remove item::tail -> 
-      let deletions = if _items.Remove item
-                      then items::deletions
-                      else deletions
-      splitChanges additions deletions tail
     | [] -> additions, deletions
+    | head::tail ->      
+      match head with
+      | Insert item ->        
+        let additions = if _items.Add item
+                        then item::additions 
+                        else additions
+        splitChanges additions deletions tail
+      | Remove item -> 
+        let deletions = if _items.Remove item
+                        then item::deletions
+                        else deletions
+        splitChanges additions deletions tail
 
     let (additions, deletions) = 
       use __ = _lock.WriterLock()
       changes |> List.ofSeq |> splitChanges [] []
     
-    let add = NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, List.toArray additions)
+    let add = NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,    List.toArray additions)
     let del = NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, List.toArray deletions)
 
     Post this context _collectionChangeEvent add
@@ -101,9 +103,21 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
   new items = new ReactiveCollectionSource<'T>(items, EqualityComparer<'T>.Default)
 
   member this.Add items =
-    use __ = _lock.WriterLock()
-    items |> Seq.iter (_items.Add >> ignore)
-    items |> NotificationFunctor Add |> _subject.OnNext
+    let changes =
+      use __ = _lock.WriterLock()
+      [ for item in items do
+          if _items.Add item
+            then yield item ]
+    
+    changes |> NotificationFunctor Insert |> _subject.OnNext
+
+  member this.Remove items =
+    let changes =
+      use __ = _lock.WriterLock()
+      [ for item in items do
+          if _items.Remove item
+            then yield item ]
+    changes |> NotificationFunctor Remove |> _subject.OnNext
 
   interface IDisposable with
     member __.Dispose() = 
@@ -116,55 +130,27 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
 
     member this.ToNotificationChanges() =
       { new ICollectionChangeObservable<'T> with
-        member this.Subscribe obs = _subject.Subscribe obs }
+        member this.Subscribe obs = 
+          let disp = _subject.Subscribe obs
+          let changes =
+            use __ = _lock.ReaderLock()
+            _items |> Seq.toList
+          obs.OnNext(NotificationFunctor Insert changes)
+          disp }
 
-    member this.ToReadOnlyNotificationCollection<'T> context =
+    member this.ToReadOnlyNotificationCollection context =
       upcast new ReactiveObservableCollection<'T>(_subject, context)
 
+type ReactiveCollectionBuilder() =
+  member this.Yield x =
+    new ReactiveCollectionSource<_>([x])
+  member this.YieldFrom (x:IReactiveCollection<'T>) = 
+    x
+  member this.
+ 
+let rxc = ReactiveCollectionBuilder()
 
-let private fromObservable obs =
-  { new IReactiveCollection<'T> with
-      member this.ToList() = upcast [| |]
-      member this.ToNotificationChanges() =
-        { new ICollectionChangeObservable<'T> with
-            member this.Subscribe obs = Observable.Empty().Subscribe obs }
-      member this.ToReadOnlyNotificationCollection context =
-        let subscription = 
-        { new IReadOnlyNotificationCollection<'T>
-          interface IDisposable with
-            member this. 
-          interface INotifyCollectionChanged with
-            [<CLIEvent>]
-            member this.CollectionChanged = collectionEvent.Publish
-
-            //inherit IDisposable
-            //inherit INotifyPropertyChanged
-            //inherit INotifyCollectionChanged
-            //inherit IReadOnlyCollection<'T>
-        : context:SynchronizationContext -> IReadOnlyNotificationCollection<'T> }
-
-
-let zero () =
-  let collectionEvent = Event<_,_>()
-  { new IReactiveCollection<'T> with
-      member this.ToList() = upcast [| |]
-      member this.ToNotificationChanges() =
-        { new ICollectionChangeObservable<'T> with
-            member this.Subscribe obs = Observable.Empty().Subscribe obs }
-      member this.ToReadOnlyNotificationCollection context =
-        let subscription = 
-        { new IReadOnlyNotificationCollection<'T>
-          interface IDisposable with
-            member this.
-          interface INotifyCollectionChanged with
-            [<CLIEvent>]
-            member this.CollectionChanged = collectionEvent.Publish
-
-            //inherit IDisposable
-            //inherit INotifyPropertyChanged
-            //inherit INotifyCollectionChanged
-            //inherit IReadOnlyCollection<'T>
-        : context:SynchronizationContext -> IReadOnlyNotificationCollection<'T> }
-
-//let bind (x:IReactiveCollection<'T>, f:'T -> IReactiveCollection<'R>) =
-  
+let sdfs = rxc {
+  yield 1
+  yield 2
+}
