@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Interfaces.fs" />
+    <Compile Include="ReactiveObservableCollection.fs" />
     <Compile Include="ReactiveCollectionBuilder.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />

@@ -1,19 +1,20 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AwaitableDictionary.Test {
+namespace KeyedProducerConsumer.Test {
     [TestClass]
     public class UnitTest1 {
         [TestMethod]
         public async Task ImmediateDictionaryTest() {
-            var dict = new AwaitableDictionary<string, int>();
+            var dict = new KeyedProducerConsumer<string, int>();
             dict.AddOrReplace("Hello", "Hello".GetHashCode());
             var s = await dict.GetItem("Hello");
             Assert.AreEqual(s, "Hello".GetHashCode());
         }
 
-        private async Task AsynchronousAddition(AwaitableDictionary<string, int> dictionary) {
+        private async Task AsynchronousAddition(KeyedProducerConsumer<string, int> dictionary) {
             await Task.Delay(1000);
             dictionary.AddOrReplace("World", "World".GetHashCode());
             dictionary.AddOrReplace("Bar", "Bar".GetHashCode());
@@ -23,7 +24,7 @@ namespace AwaitableDictionary.Test {
 
         [TestMethod]
         public async Task DelayedDictionaryTest() {
-            var dict = new AwaitableDictionary<string, int>();
+            var dict = new KeyedProducerConsumer<string, int>();
             var ignore = AsynchronousAddition(dict);
             var s1 = dict.GetItem("World");
             var s2 = dict.GetItem("Foo");
@@ -34,7 +35,7 @@ namespace AwaitableDictionary.Test {
             Assert.AreEqual(await s2, "Foo".GetHashCode());
         }
 
-        private Task AsynchronousAddition2(AwaitableDictionary<string, int> dictionary) {
+        private Task AsynchronousAddition2(KeyedProducerConsumer<string, int> dictionary) {
             dictionary.AddOrReplace("World", "World".GetHashCode());
             dictionary.AddOrReplace("Bar", "Bar".GetHashCode());
             dictionary.AddOrReplace("Foo", "Foo".GetHashCode());
@@ -45,7 +46,7 @@ namespace AwaitableDictionary.Test {
         public async Task RaceTest() {
             for (var i = 0; i < 5000000; i++) {
 
-                var dict = new AwaitableDictionary<string, int>();
+                var dict = new KeyedProducerConsumer<string, int>();
                 var ignore = AsynchronousAddition2(dict);
                 var s1 = dict.GetItem("World");
                 var s2 = dict.GetItem("Foo");

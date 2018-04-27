@@ -4,23 +4,23 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace AwaitableDictionary {
-    public class AwaitableDictionary<TKey, TItem> {
+namespace System.Threading {
+    public class KeyedProducerConsumer<TKey, TItem> {
         private readonly Dictionary<TKey, TItem> _items;
 
-        private readonly Dictionary<TKey, List<DictionaryReadAwaiter>> _notifications =
-            new Dictionary<TKey, List<DictionaryReadAwaiter>>();
+        private readonly Dictionary<TKey, List<ConsumerReadAwaiter>> _notifications =
+            new Dictionary<TKey, List<ConsumerReadAwaiter>>();
 
         private readonly ReaderWriterLock _lock =
             new ReaderWriterLock();
 
-        public class DictionaryReadAwaiter : INotifyCompletion {
+        public class ConsumerReadAwaiter : INotifyCompletion {
             private readonly object _lock = new object();
             private TItem _result;
             private long _isCompleted;
             private Action _continuations;
 
-            public DictionaryReadAwaiter GetAwaiter() {
+            public ConsumerReadAwaiter GetAwaiter() {
                 return this;
             }
 
@@ -46,24 +46,24 @@ namespace AwaitableDictionary {
             }
         }
 
-        public AwaitableDictionary(IEnumerable<KeyValuePair<TKey, TItem>> items, IEqualityComparer<TKey> comparer) {
+        public KeyedProducerConsumer(IEnumerable<KeyValuePair<TKey, TItem>> items, IEqualityComparer<TKey> comparer) {
             _items = new Dictionary<TKey, TItem>(comparer);
             foreach (var item in items) {
                 _items.Add(item.Key, item.Value);
             }
         }
 
-        public AwaitableDictionary(IEnumerable<KeyValuePair<TKey, TItem>> items)
+        public KeyedProducerConsumer(IEnumerable<KeyValuePair<TKey, TItem>> items)
             : this(items, EqualityComparer<TKey>.Default) {
 
         }
 
-        public AwaitableDictionary(IEqualityComparer<TKey> comparer)
+        public KeyedProducerConsumer(IEqualityComparer<TKey> comparer)
             : this(Enumerable.Empty<KeyValuePair<TKey, TItem>>()) {
 
         }
 
-        public AwaitableDictionary()
+        public KeyedProducerConsumer()
             : this(Enumerable.Empty<KeyValuePair<TKey, TItem>>()) {
 
         }
@@ -73,7 +73,7 @@ namespace AwaitableDictionary {
                 _lock.AcquireWriterLock(Timeout.Infinite);
                 _items.Add(key, item);
                 lock (_notifications) {
-                    List<DictionaryReadAwaiter> awaiters;
+                    List<ConsumerReadAwaiter> awaiters;
                     if (_notifications.TryGetValue(key, out awaiters)) {
                         foreach (var awaiter in awaiters) {
                             awaiter.SetResult(item);
@@ -87,23 +87,23 @@ namespace AwaitableDictionary {
             }
         }
 
-        public DictionaryReadAwaiter GetItem(TKey key) {
+        public ConsumerReadAwaiter GetItem(TKey key) {
             try {
                 _lock.AcquireReaderLock(Timeout.Infinite);
                 TItem item;
                 if (_items.TryGetValue(key, out item)) {
-                    var awaiter = new DictionaryReadAwaiter();
+                    var awaiter = new ConsumerReadAwaiter();
                     awaiter.SetResult(item);
                     return awaiter;
                 }
                 else {
                     lock (_notifications) {
-                        List<DictionaryReadAwaiter> awaiters;
+                        List<ConsumerReadAwaiter> awaiters;
                         if (!_notifications.TryGetValue(key, out awaiters)) {
-                            awaiters = new List<DictionaryReadAwaiter>();
+                            awaiters = new List<ConsumerReadAwaiter>();
                             _notifications.Add(key, awaiters);
                         }
-                        var awaiter = new DictionaryReadAwaiter();
+                        var awaiter = new ConsumerReadAwaiter();
                         awaiters.Add(awaiter);
                         return awaiter;
                     }
