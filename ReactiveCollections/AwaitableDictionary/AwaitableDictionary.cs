@@ -17,6 +17,7 @@ namespace AwaitableDictionary {
         public class DictionaryReadAwaiter : INotifyCompletion {
             private readonly object _lock = new object();
             private TItem _result;
+            private long _isCompleted;
             private Action _continuations;
 
             public DictionaryReadAwaiter GetAwaiter() {
@@ -27,16 +28,21 @@ namespace AwaitableDictionary {
                 _continuations += continuation;
             }
 
-            public bool IsCompleted { get; private set; }
+            public bool IsCompleted {
+                get {
+                    return _isCompleted != 0;
+                }
+            }
 
             public TItem GetResult() {
                 return _result;
             }
 
             public void SetResult(TItem item) {
-                _result = item;
-                IsCompleted = true;
-                _continuations?.Invoke();
+                if (Interlocked.CompareExchange(ref _isCompleted, 1, 0) == 0) {
+                    _result = item;
+                    _continuations?.Invoke();
+                }
             }
         }
 

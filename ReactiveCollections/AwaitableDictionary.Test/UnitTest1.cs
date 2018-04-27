@@ -33,5 +33,28 @@ namespace AwaitableDictionary.Test {
             Assert.AreEqual(await s3, "Bar".GetHashCode());
             Assert.AreEqual(await s2, "Foo".GetHashCode());
         }
+
+        private Task AsynchronousAddition2(AwaitableDictionary<string, int> dictionary) {
+            dictionary.AddOrReplace("World", "World".GetHashCode());
+            dictionary.AddOrReplace("Bar", "Bar".GetHashCode());
+            dictionary.AddOrReplace("Foo", "Foo".GetHashCode());
+            return Task.CompletedTask;
+        }
+
+        [TestMethod]
+        public async Task RaceTest() {
+            for (var i = 0; i < 5000000; i++) {
+
+                var dict = new AwaitableDictionary<string, int>();
+                var ignore = AsynchronousAddition2(dict);
+                var s1 = dict.GetItem("World");
+                var s2 = dict.GetItem("Foo");
+                var s3 = dict.GetItem("Bar");
+
+                Assert.AreEqual(await s1, "World".GetHashCode());
+                Assert.AreEqual(await s3, "Bar".GetHashCode());
+                Assert.AreEqual(await s2, "Foo".GetHashCode());
+            }
+        }
     }
 }
