@@ -8,6 +8,7 @@ namespace System.Threading {
     public class KeyedProducerConsumer<TKey, TItem> {
         private readonly Dictionary<TKey, TItem> _items;
 
+        //TODO This doesn't need to be a list, because we can call OnCompleted to add more ???
         private readonly Dictionary<TKey, List<ConsumerReadAwaiter>> _notifications =
             new Dictionary<TKey, List<ConsumerReadAwaiter>>();
 
@@ -112,6 +113,44 @@ namespace System.Threading {
             finally {
                 _lock.ReleaseReaderLock();
             }
+        }
+    }
+
+    public class Disposable : IDisposable {
+        private readonly Action _action;
+        private Disposable(Action action) {
+            _action = action;
+        }
+
+        public void Dispose() {
+            _action();
+        }
+
+        public static IDisposable Create(Action action) {
+            return new Disposable(action);
+        }
+        
+        public static IDisposable<T> Create<T>(Action action, T context) {
+            return new Disposable<T>(action, context);
+        }    
+    }
+
+    public interface IDisposable<T> : IDisposable {
+        T Context { get; }
+    }
+
+    public sealed class Disposable<T> : IDisposable<T> {
+        private readonly Action _action;
+        
+        public T Context { get; }
+
+        internal Disposable(Action action, T context) {
+            Context = context;
+            _action = action;
+        }
+
+        public void Dispose() {
+            _action();
         }
     }
 }

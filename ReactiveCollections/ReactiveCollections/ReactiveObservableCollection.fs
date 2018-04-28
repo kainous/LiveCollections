@@ -97,3 +97,55 @@ type private ReactiveObservableCollection<'T>(items:IObservable<ICollectionChang
   interface IEnumerable with
     member this.GetEnumerator() =
       upcast this.GetEnumerator()
+
+type ReactiveCollectionSelector<'TSource,'TResult>(changes:IObservable<IEnumerable<CollectionChangeNotification<'TSource>>>, filter:'TSource -> bool, selector:'TSource -> 'TResult, comparer:IEqualityComparer<'TSource>) as this =
+  let _items = Dictionary<'TSource,'TResult>(comparer)
+  let _lock = AsyncReaderWriterLock()
+  let _subject = new Subject<ICollectionChangeData<'TResult>>()
+
+  let OnNext changes =
+    let results = 
+      use __ = _lock.WriterLock()
+      seq { for item in changes do
+              match item with
+              | Insert x ->
+                if filter x then
+                  let y = selector x
+                  _items.[x] <- y
+                  yield Insert y
+              | Remove x ->
+                match _items.TryGetValue x with
+                | false, _ -> ()
+                | true, y ->
+                  yield Remove y }
+    { new ICollectionChangeData<_> with
+        member __.GetEnumerator() =
+          upcast results.GetEnumerator()
+      interface IEnumerable with
+        member __.GetEnumerator() =
+          upcast results.GetEnumerator() } |> _subject.OnNext
+
+  let _subscription = changes.Subscribe(OnNext, this.Dispose)
+
+  new(changes, filter, selector) = new ReactiveCollectionSelector<'TSource, 'TResult>(changes, filter, selector, EqualityComparer<'TSource>.Default)
+
+  member __.Dispose() =
+    _subscription.Dispose()
+
+  interface IReactiveCollection<'TResult> with
+    member __.ToList() =
+      use __ = _lock.ReaderLock()
+      upcast _items.Values.ToList()
+    member this.Dispose() =
+      this.Dispose()
+    member __.ToNotificationChanges() =
+      { new ICollectionChangeObservable<_> with
+        member __.Subscribe obs = 
+          let disp = _subject.Subscribe obs
+          let changes =
+            use __ = _lock.ReaderLock()
+            _items.Values.ToList()
+          obs.OnNext(NotificationFunctor Insert changes)
+          disp }
+    member __.ToReadOnlyNotificationCollection context =      
+      upcast new ReactiveObservableCollection<_>(_subject, context)

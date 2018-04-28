@@ -4,15 +4,14 @@ open System
 open System.Collections
 open System.Collections.Generic
 open System.Collections.Specialized
-open System.Reactive
-open System.Reactive.Collections
-open System.Reactive.Linq
-open System.Reactive.Subjects
 open Nito.AsyncEx
 open System.Threading.Tasks
 open System.Linq
+open System.Reactive.Linq
+open System.Reactive.Subjects
 open System.Threading
 open System.ComponentModel
+open FSharp.Control.Reactive
 
 open Helpers
 
@@ -23,7 +22,7 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
 
   new items = new ReactiveCollectionSource<'T>(items, EqualityComparer<'T>.Default)
 
-  member this.Add items =
+  member __.Add items =
     let changes =
       use __ = _lock.WriterLock()
       [ for item in items do
@@ -32,7 +31,7 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
     
     changes |> NotificationFunctor Insert |> _subject.OnNext
 
-  member this.Remove items =
+  member __.Remove items =
     let changes =
       use __ = _lock.WriterLock()
       [ for item in items do
@@ -45,13 +44,13 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
       _subject.Dispose()
 
   interface IReactiveCollection<'T> with
-    member this.ToList() =
+    member __.ToList() =
       use __ = _lock.ReaderLock()
       upcast items.ToList()
 
-    member this.ToNotificationChanges() =
+    member __.ToNotificationChanges() =
       { new ICollectionChangeObservable<'T> with
-        member this.Subscribe obs = 
+        member __.Subscribe obs = 
           let disp = _subject.Subscribe obs
           let changes =
             use __ = _lock.ReaderLock()
@@ -59,19 +58,46 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
           obs.OnNext(NotificationFunctor Insert changes)
           disp }
 
-    member this.ToReadOnlyNotificationCollection context =
+    member __.ToReadOnlyNotificationCollection context =
       upcast new ReactiveObservableCollection<'T>(_subject, context)
 
-//type ReactiveCollectionBuilder() =
-//  member this.Yield x =
-//    new ReactiveCollectionSource<_>([x])
-//  member this.YieldFrom (x:IReactiveCollection<'T>) = 
-//    x
-//  member this.
- 
-//let rxc = ReactiveCollectionBuilder()
+module ReactiveCollectionBuilders =
+  let toChangeObservable (obs:IReactiveCollection<'T>) =
+    obs.ToNotificationChanges() |> Observable.map(fun changes -> changes :> IEnumerable<_>)
 
-//let sdfs = rxc {
-//  yield 1
-//  yield 2
-//}
+  let map f (obs:IReactiveCollection<_>) =
+    new ReactiveCollectionSelector<_,_>(toChangeObservable obs, (fun _ -> true), f)
+    :> IReactiveCollection<_>
+
+  let filter f (obs:IReactiveCollection<_>) =
+    new ReactiveCollectionSelector<_,_>(toChangeObservable obs, f, id)
+    
+
+  type ReactiveCollectionBuilder() =
+    member this.Yield x =
+      let changes = Enumerable.Repeat(Insert x, 1)
+      let obs = Observable.Return changes
+      new ReactiveCollectionSelector<'T,'T>(obs, (fun _ -> true), id)
+      :> IReactiveCollection<_>
+    member this.YieldFrom (x:IReactiveCollection<'T>) = 
+      x
+    member this.Combine(x:IReactiveCollection<'T>, y:IReactiveCollection<'T>) =
+      let changes = Observable.merge (toChangeObservable x) (toChangeObservable y)
+      new ReactiveCollectionSelector<'T, 'T>(changes, (fun _ -> true), id)
+      :> IReactiveCollection<'T>
+    member this.Delay f = f()
+    member this.Zero() =
+      new ReactiveCollectionSelector<'T, 'T>(Observable.empty, (fun _ -> true), id)
+      :> IReactiveCollection<'T>
+    //member this.Where
+ 
+  let rxc = ReactiveCollectionBuilder()
+
+  let sdfs = rxc {
+    yield 1
+    yield 2
+    yield! rxc {
+      if true = true then
+        yield 3
+    }
+  }

@@ -38,6 +38,7 @@ type IReadOnlyNotificationCollection<'T> =
   inherit IReadOnlyCollection<'T>
 
 type IReactiveCollection<'T> =
+  inherit IDisposable
   abstract ToList : unit -> IList<'T>
   abstract ToNotificationChanges : unit -> ICollectionChangeObservable<'T>
   abstract ToReadOnlyNotificationCollection : context:SynchronizationContext -> IReadOnlyNotificationCollection<'T>
