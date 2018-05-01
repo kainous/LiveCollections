@@ -14,6 +14,7 @@ open System.ComponentModel
 open FSharp.Control.Reactive
 
 open Helpers
+open System.Collections.Concurrent
 
 type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>) =
   let _lock  = AsyncReaderWriterLock()
@@ -61,6 +62,55 @@ type ReactiveCollectionSource<'T>(items:seq<'T>, comparer:IEqualityComparer<'T>)
     member __.ToReadOnlyNotificationCollection context =
       upcast new ReactiveObservableCollection<'T>(_subject, context)
 
+//type TItem = class end
+
+type ReactiveCollectionCollector<'TItem>(obs : IReactiveCollection<IReactiveCollection<'TItem>>) as this =
+  let _collections = ConcurrentDictionary<IReactiveCollection<'TItem>, IDisposable * IDisposable>()
+  let _subject = new Subject<IEnumerable<CollectionChangeNotification<'TItem>>>()
+
+  let OnItemChanged (changes : IEnumerable<CollectionChangeNotification<'TItem>>) =
+    _subject.OnNext changes 
+
+  let OnItemsCompleted() = 
+    this.Dispose()
+
+  let OnCollectionChanged (changes : IEnumerable<CollectionChangeNotification<IReactiveCollection<'TItem>>>) =
+    for change in changes do
+      match change with
+      | Insert col ->       
+        let subscribe (c:IReactiveCollection<_>) = 
+          let changes = c.ToNotificationChanges().Replay()
+          let connection = changes.Connect()
+          let subscription = changes.Subscribe(OnItemChanged, OnItemsCompleted)
+          (subscription, connection)
+
+        _collections.AddOrUpdate(col, subscribe, (fun _ v -> v)) |> ignore
+      | Remove col ->
+        match _collections.TryRemove col with
+        | true, (a, b) -> 
+          a.Dispose()
+          b.Dispose()
+        | false, _ -> 
+          ()
+        
+  let _subscription, _connection =
+    let changes = obs.ToNotificationChanges().Replay()
+    let connection = changes.Connect();
+    let subscription = changes.Subscribe OnCollectionChanged
+    (subscription, connection)
+
+  member __.Dispose() =
+    _collections.Values |> Seq.iter (fun (a, b) -> a.Dispose(); b.Dispose())
+    _collections.Clear()
+    _subject.Dispose()
+    _subscription.Dispose()
+    _connection.Dispose()
+
+  interface IReactiveCollection<'TItem> with
+    member this.Dispose() =
+      this.Dispose();
+
+
 module ReactiveCollectionBuilders =
   let toChangeObservable (obs:IReactiveCollection<'T>) =
     obs.ToNotificationChanges() |> Observable.map(fun changes -> changes :> IEnumerable<_>)
@@ -89,7 +139,13 @@ module ReactiveCollectionBuilders =
     member this.Zero() =
       new ReactiveCollectionSelector<'T, 'T>(Observable.empty, (fun _ -> true), id)
       :> IReactiveCollection<'T>
-    //member this.Where
+    member this.Where(obs:IReactiveCollection<_>, predicate) =
+      obs |> filter predicate
+    member this.SelectMany<'TSource, 'TCollection, 'TResult>(obs:IReactiveCollection<'TSource>, collectionSelector: 'TSource -> IReactiveCollection<'TCollection>, resultSelector:'TCollection -> 'TResult) =
+      let s1 = new ReactiveCollectionSelector<_, _>(toChangeObservable obs, (fun _ -> true), collectionSelector)
+      let s2 = (ReactiveCollectionCollector(s1) :> IReactiveCollection<_>).ToNotificationChanges()
+      let s3 = new ReactiveCollectionSelector<_, _>(toChangeObservable s, (fun _ -> true), resultSelector)
+      s3
  
   let rxc = ReactiveCollectionBuilder()
 
