@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
+using SpecializedCollections;
 
 namespace System.Collections.LiveCollections {
-    public interface IUniquelyIdentifiable<out TKey> {
-        TKey Identifier { get; }
-    }
-
-    public abstract class UniquelyIdentifiableNotification<TKey, TItem>
-        where TItem : IUniquelyIdentifiable<TKey> {
-
+    public abstract class UniquelyIdentifiableNotification<TKey, TItem> {
         protected internal UniquelyIdentifiableNotification() { }
+
+        public abstract UniquelyIdentifiableNotification<TKey, TResult> Cast<TResult>()
+                where TResult : TItem;
 
         public sealed class Insert : UniquelyIdentifiableNotification<TKey, TItem> {
             public TItem Item { get; private set; }
-            public Insert(TItem item) {
+            public TKey Key { get; private set; }
+            public Insert(TKey key, TItem item) {
+                Key = key;
                 Item = item;
             }
 
             public override UniquelyIdentifiableNotification<TKey, TResult> Cast<TResult>() {
-                return new UniquelyIdentifiableNotification<TKey, TResult>.Insert((TResult)Item);
+                return new UniquelyIdentifiableNotification<TKey, TResult>.Insert(Key, (TResult)Item);
             }
         }
 
@@ -37,9 +37,6 @@ namespace System.Collections.LiveCollections {
                 return new UniquelyIdentifiableNotification<TKey, TResult>.Clear();
             }
         }
-
-        public abstract UniquelyIdentifiableNotification<TKey, TResult> Cast<TResult>()
-                where TResult : TItem, IUniquelyIdentifiable<TKey>;
     }
 
     public abstract class Notification<T> {
@@ -97,10 +94,37 @@ namespace System.Collections.LiveCollections {
         IObservable<T> GetObservable();
     }
 
-    public interface IUniqueLiveCollection<TKey, TItem> 
-        : IObservableHost<Notification<UniquelyIdentifiableNotification<TKey, TItem>>>
-        where TItem : IUniquelyIdentifiable<TKey> {
+    public interface IUniqueLiveCollection<TKey, TItem>
+        : IObservableHost<Notification<UniquelyIdentifiableNotification<TKey, TItem>>> {
     }
 
+    internal class UniqueLivePropertySelector<TKey, TSource, TResult> : IUniqueLiveCollection<TKey, TResult>
+        where TResult : IUniqueProperty<TKey, TResult> {
 
+        private readonly Func<TSource, bool> _filter;
+        private readonly Func<TSource, TResult> _map;
+        private readonly InsertionOrderedDictionary<TKey, TResult> _items =
+            new InsertionOrderedDictionary<TKey, TResult>();
+
+        public IObservable<Notification<UniquelyIdentifiableNotification<TKey, TResult>>> GetObservable() {
+            throw new NotImplementedException();
+        }
+
+        public UniqueLivePropertySelector(IObservable<Notification<UniquelyIdentifiableNotification<TKey, TResult>>> source, Func<TSource, bool> filter, Func<TSource, TResult> map) {
+            _filter = filter;
+            _map = map;
+        }
+    }
+
+    public interface IUniqueProperty<TKey, TItem> : IObservableHost<TItem> {
+    }
+
+    public interface IUniqueProperty<TItem> : IObservableHost<TItem> {
+    }
+
+    public static class UniqueLiveCollections {
+        //public static IUniqueProperty<R> Aggregate<TKey, T, R>(this IUniqueLiveCollection<TKey, T> source, Func<R, T> aggregator) {
+        //
+        //}
+    }
 }

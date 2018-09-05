@@ -6,4 +6,12 @@
     <RootNamespace>System.Collections.LiveCollections</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpecializedCollections\SpecializedCollections.csproj" />
+  </ItemGroup>
+
 </Project>
