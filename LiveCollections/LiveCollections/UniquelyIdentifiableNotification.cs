@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using SpecializedCollections;
 
 namespace System.Collections.LiveCollections {
@@ -105,7 +107,7 @@ namespace System.Collections.LiveCollections {
         where TResult : IUniqueProperty<TKey, TResult> {
 
         private readonly Func<TSource, bool> _filter;
-        private readonly Func<TSource, TResult> _map;
+        private readonly Func<TSource, TResult> _aggregator;
         private readonly InsertionOrderedDictionary<TKey, TResult> _items =
             new InsertionOrderedDictionary<TKey, TResult>();
 
@@ -115,7 +117,7 @@ namespace System.Collections.LiveCollections {
 
         public UniqueLivePropertyAggregator(IObservable<Notification<UniquelyIdentifiableNotification<TKey, TResult>>> source, Func<TSource, bool> filter, Func<TResult, TSource> aggregator) {
             _filter = filter;
-            _map = map;
+            _aggregator = aggregator;
         }
     }
 
@@ -143,6 +145,34 @@ namespace System.Collections.LiveCollections {
         }
     }
 
+    public interface IProducer<T> {
+        void Produce(T item);
+    }
+
+    public interface IConsumer<T> {
+        T Take();
+    }
+
+    public class ProducerConsumerQueue<T> : IProducer<T>, IConsumer<T> {
+        private readonly BlockingCollection<T> _queue = new BlockingCollection<T>();
+
+        public void Produce(T item) {
+            _queue.Add(item);
+        }
+
+        public T Take() {
+            return _queue.Take();
+        }
+    }
+
+    public static class Consumer {
+        public static IConsumer<T> AsConsumer<T>(this IObservable<T> observable) {
+            var queue = new ProducerConsumerQueue<T>();
+            Task.Run(() => observable.ForEachAsync(queue.Produce));
+            return queue;
+        }
+    }
+
     public class Employee {
         public Guid ID { get; } = Guid.NewGuid();
         public string Name { get; set; }
@@ -157,13 +187,13 @@ namespace System.Collections.LiveCollections {
             employees.Add(sue.ID, sue);
 
             var prop = employees.Aggregate<Guid, Employee, int, int>(0, (acc, elem) => acc + elem.Name.Length, a => a);
-            var s = prop.GetObservable().ToStream();
-            Debug.Assert(s.GetNext(), 6);            
-            Debug.Assert(prop.CurrentValue, 6);            
+            var s = prop.GetObservable().AsConsumer();
+            Debug.Assert(s.Take() == 6);            
+            Debug.Assert(prop.CurrentValue == 6);            
 
             employees.Add(carol.ID, carol);
-            Debug.Assert(s.GetNext(), 11);            
-            Debug.Assert(prop.CurrentValue, 11);
+            Debug.Assert(s.Take() == 11);            
+            Debug.Assert(prop.CurrentValue == 11);
         }
     }
 }
