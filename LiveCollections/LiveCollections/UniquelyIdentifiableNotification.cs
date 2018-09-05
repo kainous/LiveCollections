@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reactive.Linq;
 using SpecializedCollections;
 
 namespace System.Collections.LiveCollections {
@@ -98,7 +101,7 @@ namespace System.Collections.LiveCollections {
         : IObservableHost<Notification<UniquelyIdentifiableNotification<TKey, TItem>>> {
     }
 
-    internal class UniqueLivePropertySelector<TKey, TSource, TResult> : IUniqueLiveCollection<TKey, TResult>
+    internal class UniqueLivePropertyAggregator<TKey, TSource, TResult> : IUniqueLiveCollection<TKey, TResult>
         where TResult : IUniqueProperty<TKey, TResult> {
 
         private readonly Func<TSource, bool> _filter;
@@ -110,7 +113,7 @@ namespace System.Collections.LiveCollections {
             throw new NotImplementedException();
         }
 
-        public UniqueLivePropertySelector(IObservable<Notification<UniquelyIdentifiableNotification<TKey, TResult>>> source, Func<TSource, bool> filter, Func<TSource, TResult> map) {
+        public UniqueLivePropertyAggregator(IObservable<Notification<UniquelyIdentifiableNotification<TKey, TResult>>> source, Func<TSource, bool> filter, Func<TResult, TSource> aggregator) {
             _filter = filter;
             _map = map;
         }
@@ -123,8 +126,44 @@ namespace System.Collections.LiveCollections {
     }
 
     public static class UniqueLiveCollections {
-        //public static IUniqueProperty<R> Aggregate<TKey, T, R>(this IUniqueLiveCollection<TKey, T> source, Func<R, T> aggregator) {
-        //
-        //}
+        public static IUniqueProperty<TResult> Aggregate<TKey, TSource, TAccumulator, TResult>(this IUniqueLiveCollection<TKey, TSource> source, TAccumulator seed, Func<TAccumulator, TSource, TAccumulator> aggregator, Func<TAccumulator, TResult> resultSelector) {
+            throw new NotImplementedException();
+        }
+
+        //public static 
+    }
+
+    public class LiveCollectionSource<TKey, TItem> : IUniqueLiveCollection<TKey, TItem> {
+        public IObservable<Notification<UniquelyIdentifiableNotification<TKey, TItem>>> GetObservable() {
+            throw new NotImplementedException();
+        }
+
+        public void Add(TKey key, TItem item) {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Employee {
+        public Guid ID { get; } = Guid.NewGuid();
+        public string Name { get; set; }
+
+        public static void Test() {
+            var employees = new LiveCollectionSource<Guid, Employee>();
+            var bob = new Employee { Name = "Bob" };
+            var sue = new Employee { Name = "Sue" };
+            var carol = new Employee { Name = "Carol" };
+
+            employees.Add(bob.ID, bob);
+            employees.Add(sue.ID, sue);
+
+            var prop = employees.Aggregate<Guid, Employee, int, int>(0, (acc, elem) => acc + elem.Name.Length, a => a);
+            var s = prop.GetObservable().ToStream();
+            Debug.Assert(s.GetNext(), 6);            
+            Debug.Assert(prop.CurrentValue, 6);            
+
+            employees.Add(carol.ID, carol);
+            Debug.Assert(s.GetNext(), 11);            
+            Debug.Assert(prop.CurrentValue, 11);
+        }
     }
 }
