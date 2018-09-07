@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <Compile Include="Interfaces.fs" />
+    <Compile Include="Properties.fs" />
+    <Compile Include="LiveCollections.fs" />
   </ItemGroup>
 
   <ItemGroup>
