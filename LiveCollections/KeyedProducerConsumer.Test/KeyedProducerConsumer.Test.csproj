@@ -55,8 +55,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AwaitableDictionary\KeyedProducerConsumer.csproj">
-      <Project>{e0619185-5b5a-4afd-b64f-952e5e7e20e7}</Project>
+    <ProjectReference Include="..\KeyedProducerConsumer\KeyedProducerConsumer.csproj">
+      <Project>{53d1ba4c-e44c-4a8b-9e62-45da3841dd60}</Project>
       <Name>KeyedProducerConsumer</Name>
     </ProjectReference>
   </ItemGroup>

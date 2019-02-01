@@ -5,7 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="Interfaces.fs" />
+    <Compile Include="Properties.fs" />
+    <Compile Include="LiveCollections.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="4.1.0" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.1.0" />
   </ItemGroup>
 
 </Project>
