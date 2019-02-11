@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Monadic;
-using System.Text;
-
-namespace SpecializedCollections {
+﻿namespace Halliburton.IC.SpecializedCollections {
     //public interface IEitherKeyDictionary<TKey1, TKey2, TValue> {
     //    IDictionary<TKey1, TValue> AsLeftKeyedDictionary();
     //    IDictionary<TKey2, TValue> AsRightKeyedDictionary();

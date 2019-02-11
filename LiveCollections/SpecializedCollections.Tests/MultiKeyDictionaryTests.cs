@@ -1,9 +1,9 @@
-﻿using System.Collections.Monadic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using Halliburton.SpecializedCollections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SpecializedCollections.Tests {
+namespace Halliburton.IC.SpecializedCollections.Tests {
     [TestClass]
     public class MultiKeyDictionaryTests {
         private readonly (string, int, string)[] _items = new[] {

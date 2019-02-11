@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Monadic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 
-namespace SpecializedCollections {
+namespace Halliburton.IC.SpecializedCollections {
     public interface IMultiKeyDictionary<TUpperKey, TLowerKey, TValue> {
         Task AddOrUpdateMany(ILookup<TUpperKey, TLowerKey> keys, Func<TUpperKey, TLowerKey, TValue> addValueFactory, Func<TUpperKey, TLowerKey, TValue, TValue> updateValueFactory, CancellationToken cancellationToken = default);
         Task<IReadOnlyDictionary<TLowerKey, TValue>> GetGrouping(TUpperKey upperKey, CancellationToken cancellationToken = default);

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace System.Collections.Monadic {
+namespace Halliburton.IC.SpecializedCollections {
     public sealed class Some<T> : Option<T> {
         public T Value { get; }
         public Some(T value) {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SpecializedCollections {
+namespace Halliburton.IC.SpecializedCollections {
     public static class Bag {
         private static T Id<T>(T value) => value;
 

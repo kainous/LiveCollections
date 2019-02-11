@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using Halliburton.SpecializedCollections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Monadic;
 
-namespace SpecializedCollections.Tests {
+namespace Halliburton.IC.SpecializedCollections.Tests {
     [TestClass]
     public class OptionTests {
         private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int> {

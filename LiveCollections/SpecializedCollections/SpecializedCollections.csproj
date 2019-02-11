@@ -3,6 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Halliburton.SpecializedCollections</PackageId>
+    <Company>Halliburton</Company>
+    <Authors>Intelligent Completions</Authors>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <AssemblyName>Halliburton.IC.SpecializedCollections</AssemblyName>
+    <RootNamespace>Halliburton.IC.SpecializedCollections</RootNamespace>
+    <Description>Collections commonly used in Intelligent Completions files</Description>
+    <PackageTags>collections, Halliburton, IC</PackageTags>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
