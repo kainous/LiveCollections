@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>System.Collections.Monadic</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Nicholas Cooper</Authors>
+    <Product>System.Collections.Monadic</Product>
+    <Description>Monadic objects for C#</Description>
+    <AssemblyName>System.Collections.Monadic</AssemblyName>
+    <RootNamespace>System.Collections.Monadic</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>

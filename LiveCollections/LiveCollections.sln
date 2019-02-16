@@ -16,7 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpecializedCollections", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveCollections2", "LiveCollections2\LiveCollections2.csproj", "{D3AA745A-4902-427E-94F6-A206D89D1240}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LiveCollections", "LiveCollections\LiveCollections.fsproj", "{D457D6AE-A14F-42A5-BD2F-5B1E9DE9A9F4}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LiveCollections", "LiveCollections\LiveCollections.fsproj", "{D457D6AE-A14F-42A5-BD2F-5B1E9DE9A9F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monadic", "Monadic\Monadic.csproj", "{5812C09F-E0EC-44FE-8BDB-EA17842828D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{D457D6AE-A14F-42A5-BD2F-5B1E9DE9A9F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D457D6AE-A14F-42A5-BD2F-5B1E9DE9A9F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D457D6AE-A14F-42A5-BD2F-5B1E9DE9A9F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5812C09F-E0EC-44FE-8BDB-EA17842828D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5812C09F-E0EC-44FE-8BDB-EA17842828D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5812C09F-E0EC-44FE-8BDB-EA17842828D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5812C09F-E0EC-44FE-8BDB-EA17842828D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
