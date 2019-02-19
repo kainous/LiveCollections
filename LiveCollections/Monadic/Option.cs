@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace System.Collections.Monadic {
+namespace CSharp.Collections.Monadic {
     // Works similar to Nullable<T> without the class requirement
     // Also works with LINQ
     public sealed class Option<T> {

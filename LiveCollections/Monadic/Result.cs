@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Runtime.ExceptionServices;
 
-namespace System.Collections.Monadic {
+namespace CSharp.Collections.Monadic {
     public sealed class Result<T1, T2> {
         internal bool IsSuccess { get; }
         internal T1 Value1 { get; }
