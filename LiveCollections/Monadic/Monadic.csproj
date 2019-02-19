@@ -7,10 +7,11 @@
     <Authors>Nicholas Cooper</Authors>
     <Product>CSharp.Collections.Monadic</Product>
     <Description>Monadic objects for C#</Description>
-    <AssemblyName>System.Collections.Monadic</AssemblyName>
-    <RootNamespace>System.Collections.Monadic</RootNamespace>
+    <AssemblyName>CSharp.Collections.Monadic</AssemblyName>
+    <RootNamespace>CSharp.Collections.Monadic</RootNamespace>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
 </Project>
