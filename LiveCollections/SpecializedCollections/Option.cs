@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 
-namespace Halliburton.IC.SpecializedCollections {
+namespace Halliburton.IC.SpecializedCollections {       
     public abstract class Option<T> {
         internal Option() { }
         public abstract IEnumerable<T> AsEnumerable();

@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime;
+using System.Runtime.CompilerServices;
 
 namespace CSharp.Collections.Monadic {
     // Works similar to Nullable<T> without the class requirement
     // Also works with LINQ
+    [AsyncMethodBuilder(typeof(OptionAsyncMethodBuilder<>))]
+    [DebuggerDisplay("{HasValue ? \"Some(\" + Value.ToString() + \")\" : None}")]
     public sealed class Option<T> {
         internal bool HasValue { get; }
         internal T Value { get; }
@@ -56,7 +61,12 @@ namespace CSharp.Collections.Monadic {
 
         public static Option<T> None<T>() {
             return Option<T>.NoneValue;
-        }
+        }        
+    }
+
+    namespace Tasks {
+        public static OptionAwaiter<T> GetAwaiter<T>(this Option<T> option) =>
+            new OptionAwaiter<T>(option);
     }
 
     namespace Linq {

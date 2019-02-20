@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 
 namespace CSharp.Collections.Monadic {
+    [DebuggerDisplay("{IsSuccess ? \"Success(\" + Value1.ToString() + \")\" : \"Failure(\" + Value2.ToString() + \")\", nq}")]
     public sealed class Result<T1, T2> {
         internal bool IsSuccess { get; }
         internal T1 Value1 { get; }
         internal T2 Value2 { get; }
 
-        internal Result(T1 value) {
+        public Result(T1 value) {
             Value1 = value;
             IsSuccess = true;
         }
 
-        internal Result(T2 value) {
+        public Result(T2 value) {
             Value2 = value;
             IsSuccess = false;
         }
@@ -58,6 +60,9 @@ namespace CSharp.Collections.Monadic {
                 return true;
             }
         }
+
+        private string DebuggerDisplay =>
+            IsSuccess ? $"Success: {Value1}" : $"Failure: {Value2}";
     }
 
     public static class Result {
