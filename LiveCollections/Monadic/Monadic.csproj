@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net451;netstandard1.0;netcoreapp1.0</TargetFrameworks>
     <PackageId>CSharp.Collections.Monadic</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Authors>Nicholas Cooper</Authors>
     <Product>CSharp.Collections.Monadic</Product>
     <Description>Monadic objects for C#</Description>
@@ -11,8 +11,9 @@
     <RootNamespace>CSharp.Collections.Monadic</RootNamespace>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageIconUrl>https://github.com/kainous/LiveCollections/blob/master/LiveCollections/Monadic/license.md</PackageIconUrl>
+    <PackageLicenseUrl>https://github.com/kainous/LiveCollections/blob/master/LiveCollections/Monadic/license.md</PackageLicenseUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
 
 </Project>

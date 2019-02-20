@@ -61,7 +61,7 @@ namespace CSharp.Collections.Monadic {
     }
 
     public static class Result {
-        private static T id<T>(T value) =>
+        private static T Id<T>(T value) =>
             value;
 
         public static Result<T, Exception> Try<T>(Func<T> action, Action @finally) {
@@ -86,7 +86,7 @@ namespace CSharp.Collections.Monadic {
             source.IsSuccess ? binder(source.Value1) : new Result<TResult, T2>(source.Value2);
 
         public static Result<T1, T2> SelectMany<T1, T2>(this Result<Result<T1, T2>, T2> source) =>
-            source.Bind(id);
+            source.Bind(Id);
 
         public static Result<TResult, T2> SelectMany<TSource, TIntermediate, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TIntermediate, T2>> intermediateSelector, Func<TSource, TIntermediate, TResult> resultSelector) =>
             source.Bind(x => intermediateSelector(x).Bind(y => new Result<TResult, T2>(resultSelector(x, y))));
@@ -97,7 +97,7 @@ namespace CSharp.Collections.Monadic {
         public static Option<T1> ToOption<T1, T2>(this Result<T1, T2> result) => 
             result.If(a => a.Some(), _ => Option.None<T1>());
 
-        public static IEnumerable<T1> AsEnumerable<T1, T2>(this Result<T1, T2> result) =>
+        public static IEnumerable<T1> ToEnumerable<T1, T2>(this Result<T1, T2> result) =>
             result.If(a => Enumerable.Repeat(a, 1), _ => Enumerable.Empty<T1>());
     }
 }
