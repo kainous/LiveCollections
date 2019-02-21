@@ -39,7 +39,7 @@ namespace CSharp.Collections.Monadic {
         public T If<T>(T result1, T result2) =>
             IsSuccess ? result1 : result2;
 
-        public bool TryGet(out T1 result, T1 alternate = default) {
+        public bool TryGet(out T1 result, T1 alternate = default(T1)) {
             if (IsSuccess) {
                 result = Value1;
                 return true;
@@ -50,7 +50,7 @@ namespace CSharp.Collections.Monadic {
             }
         }
 
-        public bool TryGet(out T2 result, T2 alternate = default) {
+        public bool TryGet(out T2 result, T2 alternate = default(T2)) {
             if (IsSuccess) {
                 result = alternate;
                 return false;

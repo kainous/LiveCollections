@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451;netcoreapp1.0</TargetFrameworks>
+    <TargetFrameworks>net452; netcoreapp2.0</TargetFrameworks>
     <PackageId>CSharp.Collections.Monadic</PackageId>
     <Version>0.0.3</Version>
     <Authors>Nicholas Cooper</Authors>
@@ -9,17 +9,14 @@
     <Description>Monadic objects for C#</Description>
     <AssemblyName>CSharp.Collections.Monadic</AssemblyName>
     <RootNamespace>CSharp.Collections.Monadic</RootNamespace>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7.2</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseUrl>https://github.com/kainous/LiveCollections/blob/master/LiveCollections/Monadic/license.md</PackageLicenseUrl>
     <PackageIconUrl></PackageIconUrl>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <Reference Include="System.Runtime">
-      <HintPath>..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.netcore.app\2.1.0\ref\netcoreapp2.1\System.Runtime.dll</HintPath>
-    </Reference>
+	<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
   </ItemGroup>
-
 </Project>

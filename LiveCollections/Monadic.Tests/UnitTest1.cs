@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
-using CSharp.Collections.Monadic;
-using CSharp.Collections.Monadic.Tasks;
+﻿using CSharp.Collections.Monadic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CSharp.Collections.Monadic.Tasks;
 
 namespace Monadic.Tests {
     [TestClass]
@@ -14,13 +13,24 @@ namespace Monadic.Tests {
             var d = Option.None<string>();
         }
 
+        public async Option<string> Concatenate(Option<string> a, Option<string> b) {
+            var x = await a;
+            var y = await b;
+            return x + y;
+        }
+
         [TestMethod]
-        public Option<T>
+        public void TestMethod2() {
+            var result = Concatenate(Option.Some("Hello "), Option.Some("World"));
+            Assert.AreEqual(result.GetValue(string.Empty), "Hello World");
+            result = Concatenate(Option.None<string>(), Option.Some("Try"));
+            Assert.AreEqual(result.GetValue("Fail"), "Fail");
+        }
     }
 
     internal static class Helper {
-        public static async Task<T> AsTask<T>(this Option<T> option) {
-            return await option;
-        }
+        //public static async Task<T> AsTask<T>(this Option<T> option) {
+        //     await option;
+        //}
     }
 }
