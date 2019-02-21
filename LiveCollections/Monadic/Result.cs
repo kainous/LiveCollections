@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
+using CSharp.Collections.Monadic.Tasks;
 
 namespace CSharp.Collections.Monadic {
-    [DebuggerDisplay("{IsSuccess ? \"Success(\" + Value1.ToString() + \")\" : \"Failure(\" + Value2.ToString() + \")\", nq}")]
+    [AsyncMethodBuilder(typeof(ResultAsyncMethodBuilder<,>))]
     public sealed class Result<T1, T2> {
         internal bool IsSuccess { get; }
         internal T1 Value1 { get; }
@@ -61,8 +63,15 @@ namespace CSharp.Collections.Monadic {
             }
         }
 
-        private string DebuggerDisplay =>
-            IsSuccess ? $"Success: {Value1}" : $"Failure: {Value2}";
+        public override string ToString() =>
+            IsSuccess ? $"Success: {Value1}" : $"Failure: {Value2}";            
+    }
+
+    namespace Tasks {
+        public static class ResultExtensions {
+            public static ResultAwaiter<T1, T2> GetAwaiter<T1, T2>(this Result<T1, T2> result) =>
+                new ResultAwaiter<T1, T2>(result);
+        }
     }
 
     public static class Result {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CSharp.Collections.Monadic.Tasks;
 
 namespace CSharp.Collections.Monadic {
     // Works similar to Nullable<T> without the class requirement

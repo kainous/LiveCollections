@@ -20,6 +20,16 @@ namespace Demo {
             return result;
         }
 
+        public static async Result<int, Exception> Add(Result<int, Exception> first, Result<int, Exception> second) {
+            var a = await first;
+            Console.WriteLine("Get first");
+            var b = await second;
+            Console.WriteLine("Get second");
+            var result = a + b;
+            Console.WriteLine("Calculate");
+            return result;
+        }
+
         static void Main(string[] args) {
             Console.WriteLine("Hello World!");
             Console.WriteLine(Concatenate(Option.Some("Hello "), Option.Some("World")));

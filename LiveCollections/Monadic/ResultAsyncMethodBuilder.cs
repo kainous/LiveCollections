@@ -1,22 +1,21 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace CSharp.Collections.Monadic.Tasks {
-    public class OptionAsyncMethodBuilder<T> {
-        public Option<T> Task { get; private set; } =
-            Option.None<T>();
+    public class ResultAsyncMethodBuilder<T1, Exception> {
+        public Result<T1, Exception> Task { get; private set; } =
+            null;
 
-        public static OptionAsyncMethodBuilder<T> Create() =>
-            new OptionAsyncMethodBuilder<T>();
+        public static ResultAsyncMethodBuilder<T1, Exception> Create() =>
+            new ResultAsyncMethodBuilder<T1, Exception>();
 
         public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine =>
             stateMachine.MoveNext();
 
-        public void SetResult(T result) =>
-           Task = Option.Some(result);
+        public void SetResult(T1 result) =>
+           Task = new Result<T1, Exception>(result);
 
         public void SetException(Exception ex) {
-            //Empty
+            Task = new Result<T1, Exception>(ex);
         }
 
         public void SetStateMachine(IAsyncStateMachine stateMachine) { }
