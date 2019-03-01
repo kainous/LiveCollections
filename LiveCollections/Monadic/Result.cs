@@ -6,9 +6,8 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
 using CSharp.Collections.Monadic.Tasks;
 
-namespace CSharp.Collections.Monadic {
-    [AsyncMethodBuilder(typeof(ResultAsyncMethodBuilder<,>))]
-    public sealed class Result<T1, T2> {
+namespace CSharp.Collections.Monadic {    
+    public class Result<T1, T2> {
         internal bool IsSuccess { get; }
         internal T1 Value1 { get; }
         internal T2 Value2 { get; }
@@ -41,7 +40,7 @@ namespace CSharp.Collections.Monadic {
         public T If<T>(T result1, T result2) =>
             IsSuccess ? result1 : result2;
 
-        public bool TryGet(out T1 result, T1 alternate = default(T1)) {
+        public bool TryGet(out T1 result, T1 alternate = default) {
             if (IsSuccess) {
                 result = Value1;
                 return true;
@@ -52,7 +51,7 @@ namespace CSharp.Collections.Monadic {
             }
         }
 
-        public bool TryGet(out T2 result, T2 alternate = default(T2)) {
+        public bool TryGet(out T2 result, T2 alternate = default) {
             if (IsSuccess) {
                 result = alternate;
                 return false;
@@ -78,6 +77,8 @@ namespace CSharp.Collections.Monadic {
         private static T Id<T>(T value) =>
             value;
 
+        private static void Id() { }
+
         public static Result<T, Exception> Try<T>(Func<T> action, Action @finally) {
             try {
                 return new Result<T, Exception>(action());
@@ -91,10 +92,10 @@ namespace CSharp.Collections.Monadic {
         }
 
         public static T Run<T>(this Result<T, Exception> result) =>
-            result.If(a => a, ex => { ExceptionDispatchInfo.Capture(ex).Throw(); throw ex; });
+            result.If(Id, ExceptionHelpers.Rethrow<T>);
 
         public static Result<T, Exception> Try<T>(Func<T> action) =>
-            Try(action, () => { });
+            Try(action, Id);
 
         public static Result<TResult, T2> Bind<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TResult, T2>> binder) =>
             source.IsSuccess ? binder(source.Value1) : new Result<TResult, T2>(source.Value2);
@@ -106,12 +107,34 @@ namespace CSharp.Collections.Monadic {
             source.Bind(x => intermediateSelector(x).Bind(y => new Result<TResult, T2>(resultSelector(x, y))));
 
         public static Result<TResult, T2> SelectMany<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TResult, T2>> resultSelector) =>
-            source.Bind(x => resultSelector(x));
+            source.Bind(x => resultSelector(x));        
 
         public static Option<T1> ToOption<T1, T2>(this Result<T1, T2> result) => 
-            result.If(a => a.Some(), _ => Option.None<T1>());
+            result.If(Option.Some, _ => Option.None<T1>());
 
         public static IEnumerable<T1> ToEnumerable<T1, T2>(this Result<T1, T2> result) =>
             result.If(a => Enumerable.Repeat(a, 1), _ => Enumerable.Empty<T1>());
+
+        public static Result<T> Success<T>(this T value) {
+            return new Result<T>(value);
+        }
+
+        public static Result<T1, T2> Success<T1, T2>(this T1 value) {
+            return new Result<T1, T2>(value);
+        }
+
+        public static Result<T1, T2> Failure<T1, T2>(this T2 value) {
+            return new Result<T1, T2>(value);
+        }
+
+        public static Result<T> Failure<T>(this Exception exception) {
+            return new Result<T>(exception);
+        }
+    }
+
+    [AsyncMethodBuilder(typeof(ResultAsyncMethodBuilder<>))]
+    public class Result<T> : Result<T, Exception> {
+        public Result(T value) : base(value) { }
+        public Result(Exception exception) : base(exception) { }
     }
 }

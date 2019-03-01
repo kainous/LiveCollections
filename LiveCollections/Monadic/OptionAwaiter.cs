@@ -5,9 +5,8 @@ namespace CSharp.Collections.Monadic.Tasks {
     public class OptionAwaiter<T> : INotifyCompletion {
         private Option<T> _option;
 
-        public OptionAwaiter(Option<T> option) {
+        public OptionAwaiter(Option<T> option) => 
             _option = option;
-        }
 
         public bool IsCompleted =>
             _option.HasValue;

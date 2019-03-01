@@ -28,7 +28,7 @@ namespace CSharp.Collections.Monadic {
         }
 
         public bool TryGet(out T value) {
-            value = HasValue ? Value : default(T);
+            value = HasValue ? Value : default;
             return HasValue;
         }
 
@@ -47,7 +47,7 @@ namespace CSharp.Collections.Monadic {
         public R If<R>(Func<T, R> action, R alternateAction) =>
             HasValue ? action(Value) : alternateAction;
 
-        public T GetValue(T alternativeValue = default(T)) =>
+        public T GetValue(T alternativeValue = default) =>
             HasValue ? Value : alternativeValue;
 
         public Option<R> Bind<R>(Func<T, Option<R>> binder) =>
@@ -70,13 +70,11 @@ namespace CSharp.Collections.Monadic {
     }
 
     public static class Option {
-        public static Option<T> Some<T>(this T value) {
-            return new Option<T>(value);
-        }
+        public static Option<T> Some<T>(this T value) => 
+            new Option<T>(value);
 
-        public static Option<T> None<T>() {
-            return Option<T>.NoneValue;
-        }
+        public static Option<T> None<T>() => 
+            Option<T>.NoneValue;
     }
 
     namespace Tasks {
@@ -89,7 +87,7 @@ namespace CSharp.Collections.Monadic {
     namespace Linq {
         public static class OptionExtensions {
             public static Option<TResult> Select<TSource, TResult>(this Option<TSource> source, Func<TSource, TResult> selector) =>
-                source.Bind(x => selector(x).Some());
+                source.Bind(x => Option.Some(selector(x)));
 
             public static Option<T> SelectMany<T>(this Option<Option<T>> source) =>
                 source.Bind(x => x);
