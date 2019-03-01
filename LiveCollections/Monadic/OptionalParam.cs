@@ -14,14 +14,10 @@ namespace CSharp.Collections.Monadic {
             _value = value;
         }
 
-        public static implicit operator OptionalParam<T>(T value) {
-            return new OptionalParam<T>(value);
-        }
+        public static implicit operator OptionalParam<T>(T value) => 
+            new OptionalParam<T>(value);
 
-        public void SetIf(ref T member) {
-            if (_hasValue) {
-                member = _value;
-            }
-        }
+        public static T operator |(OptionalParam<T> optional, T alternativeValue) => 
+            optional._hasValue ? optional._value : alternativeValue;
     }
 }
