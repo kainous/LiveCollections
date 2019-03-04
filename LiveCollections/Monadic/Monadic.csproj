@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net452; netcoreapp2.0</TargetFrameworks>
     <PackageId>CSharp.Collections.Monadic</PackageId>
-    <Version>0.0.5</Version>
+    <Version>0.0.6</Version>
     <Authors>Nicholas Cooper</Authors>
     <Product>CSharp.Collections.Monadic</Product>
     <Description>Monadic objects for C#</Description>

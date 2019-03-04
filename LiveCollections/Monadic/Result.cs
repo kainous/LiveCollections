@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
 using CSharp.Collections.Monadic.Tasks;
 
-namespace CSharp.Collections.Monadic {    
-    public class Result<T1, T2> {
+namespace CSharp.Collections.Monadic {
+    public class Result<T1, T2> : IEquatable<Result<T1, T2>> {
         internal bool IsSuccess { get; }
         internal T1 Value1 { get; }
         internal T2 Value2 { get; }
@@ -63,7 +61,28 @@ namespace CSharp.Collections.Monadic {
         }
 
         public override string ToString() =>
-            IsSuccess ? $"Success: {Value1}" : $"Failure: {Value2}";            
+            IsSuccess ? $"Success: {Value1}" : $"Failure: {Value2}";
+
+        protected bool EqualsCore(Result<T1, T2> other) => 
+            !Equals(other, null)
+                && (other.IsSuccess && Equals(Value1, other.Value1) || Equals(Value2, other.Value2));
+
+        public static bool operator ==(Result<T1, T2> x, Result<T1, T2> y) =>
+            ReferenceEquals(x, y) || !Equals(x, null) && x.EqualsCore(y);
+
+        public static bool operator !=(Result<T1, T2> x, Result<T1, T2> y) =>
+            !(x == y);
+
+        public bool Equals(Result<T1, T2> other) =>
+            ReferenceEquals(this, other) || EqualsCore(other);
+
+        public override bool Equals(object obj) => 
+            ReferenceEquals(this, obj) || obj is Result<T1, T2> other && EqualsCore(other);
+
+        public override int GetHashCode() => 
+            IsSuccess 
+            ? Value1.GetHashCode() 
+            : Value2.GetHashCode();
     }
 
     namespace Tasks {
@@ -100,41 +119,88 @@ namespace CSharp.Collections.Monadic {
         public static Result<TResult, T2> Bind<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TResult, T2>> binder) =>
             source.IsSuccess ? binder(source.Value1) : new Result<TResult, T2>(source.Value2);
 
+        public static Result<TResult> Bind<TSource, TResult>(this Result<TSource> source, Func<TSource, Result<TResult>> binder) =>
+            source.IsSuccess ? binder(source.Value1) : new Result<TResult>(source.Value2);
+
         public static Result<T1, T2> SelectMany<T1, T2>(this Result<Result<T1, T2>, T2> source) =>
+            source.Bind(Id);
+
+        public static Result<T> SelectMany<T>(this Result<Result<T>> source) =>
             source.Bind(Id);
 
         public static Result<TResult, T2> SelectMany<TSource, TIntermediate, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TIntermediate, T2>> intermediateSelector, Func<TSource, TIntermediate, TResult> resultSelector) =>
             source.Bind(x => intermediateSelector(x).Bind(y => new Result<TResult, T2>(resultSelector(x, y))));
 
-        public static Result<TResult, T2> SelectMany<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TResult, T2>> resultSelector) =>
-            source.Bind(x => resultSelector(x));        
+        public static Result<TResult> SelectMany<TSource, TIntermediate, TResult>(this Result<TSource> source, Func<TSource, Result<TIntermediate>> intermediateSelector, Func<TSource, TIntermediate, TResult> resultSelector) =>
+            source.Bind(x => intermediateSelector(x).Bind(y => new Result<TResult>(resultSelector(x, y))));
 
-        public static Option<T1> ToOption<T1, T2>(this Result<T1, T2> result) => 
+        public static Result<TResult, T2> SelectMany<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, Result<TResult, T2>> resultSelector) =>
+            source.Bind(resultSelector);
+
+        public static Result<TResult> SelectMany<TSource, TResult>(this Result<TSource> source, Func<TSource, Result<TResult>> resultSelector) =>
+            source.Bind(resultSelector);
+
+        public static Result<TResult1, TResult2> Select<TSource1, TResult1, TSource2, TResult2>(this Result<TSource1, TSource2> source, Func<TSource1, TResult1> selector1, Func<TSource2, TResult2> selector2) =>
+            source.IsSuccess
+                ? new Result<TResult1, TResult2>(selector1(source.Value1))
+                : new Result<TResult1, TResult2>(selector2(source.Value2));
+
+        public static Result<TResult> Select<TSource, TResult>(this Result<TSource> source, Func<TSource, TResult> selector1, Func<Exception, Exception> selector2) =>
+            source.IsSuccess
+                ? new Result<TResult>(selector1(source.Value1))
+                : new Result<TResult>(selector2(source.Value2));
+
+        public static Result<TResult, T2> Select<TSource, TResult, T2>(this Result<TSource, T2> source, Func<TSource, TResult> selector) =>
+            source.Select(selector, Id);
+
+        public static Result<TResult> Select<TSource, TResult>(this Result<TSource> source, Func<TSource, TResult> selector) =>
+            source.Select(selector, Id);
+
+        public static Result<T1, TResult> SelectError<T1, TSource, TResult>(this Result<T1, TSource> source, Func<TSource, TResult> selector) =>
+            source.Select(Id, selector);
+
+        public static Result<T> SelectError<T>(this Result<T> source, Func<Exception, Exception> selector) =>
+            source.Select(Id, selector);
+
+        public static Option<T1> ToOption<T1, T2>(this Result<T1, T2> result) =>
             result.If(Option.Some, _ => Option.None<T1>());
 
         public static IEnumerable<T1> ToEnumerable<T1, T2>(this Result<T1, T2> result) =>
             result.If(a => Enumerable.Repeat(a, 1), _ => Enumerable.Empty<T1>());
 
-        public static Result<T> Success<T>(this T value) {
-            return new Result<T>(value);
-        }
+        public static Result<T> Success<T>(this T value) =>
+            new Result<T>(value);
 
-        public static Result<T1, T2> Success<T1, T2>(this T1 value) {
-            return new Result<T1, T2>(value);
-        }
+        public static Result<T1, T2> Success<T1, T2>(this T1 value) =>
+            new Result<T1, T2>(value);
 
-        public static Result<T1, T2> Failure<T1, T2>(this T2 value) {
-            return new Result<T1, T2>(value);
-        }
+        public static Result<T1, T2> Failure<T1, T2>(this T2 value) =>
+            new Result<T1, T2>(value);
 
-        public static Result<T> Failure<T>(this Exception exception) {
-            return new Result<T>(exception);
-        }
+        public static Result<T> Failure<T>(this Exception exception) =>
+            new Result<T>(exception);
     }
 
     [AsyncMethodBuilder(typeof(ResultAsyncMethodBuilder<>))]
-    public class Result<T> : Result<T, Exception> {
+    public class Result<T> : Result<T, Exception> , IEquatable<Result<T>> {
         public Result(T value) : base(value) { }
         public Result(Exception exception) : base(exception) { }
+
+        public static bool operator ==(Result<T> x, Result<T> y) =>
+            ReferenceEquals(x, y) || !Equals(x, null) && x.EqualsCore(y);
+
+        public static bool operator !=(Result<T> x, Result<T> y) =>
+            !(x == y);
+
+        public bool Equals(Result<T> other) =>
+            ReferenceEquals(this, other) || EqualsCore(other);
+
+        // Required because of warnings
+        public override bool Equals(object obj) =>
+            base.Equals(obj);
+
+        // Required because of warnings
+        public override int GetHashCode() =>
+            base.GetHashCode();
     }
 }
