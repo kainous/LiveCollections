@@ -67,6 +67,12 @@ namespace CSharp.Collections.Monadic {
 
         public override int GetHashCode() => 
             HasValue ? Value.GetHashCode() : 0;
+
+        public static Option<T> operator |(Option<T> x, Option<T> y) => 
+            x.If(_ => x, y);
+
+        public static T operator |(Option<T> x, T y) =>
+            x.If(a => a, y);
     }
 
     public static class Option {

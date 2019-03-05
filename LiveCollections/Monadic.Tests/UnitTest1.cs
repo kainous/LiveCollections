@@ -7,8 +7,8 @@ namespace Monadic.Tests {
     public class UnitTest1 {
         [TestMethod]
         public void TestMethod1() {
-            var a = new Result<string, int>("Hello");
-            var b = new Result<string, int>(3);
+            var a = new Choice<string, int>("Hello");
+            var b = new Choice<string, int>(3);
             var c = Option.Some(3);
             var d = Option.None<string>();
         }

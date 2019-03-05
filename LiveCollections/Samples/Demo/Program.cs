@@ -20,7 +20,7 @@ namespace Demo {
             return result;
         }
 
-        public static async Result<int> Add(Result<int, Exception> first, Result<int, Exception> second) {
+        public static async Result<int> Add(Choice<int, Exception> first, Choice<int, Exception> second) {
             var a = await first;
             Console.WriteLine("Get first");
             var b = await second;
